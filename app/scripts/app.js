@@ -9,7 +9,6 @@ angular.module('starter', [
   'ionic',
   'starter.controllers',
   'starter.services',
-  'starter.stream',
   'ngCordova'
 ])
 
