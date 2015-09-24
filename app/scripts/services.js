@@ -47,4 +47,52 @@ angular.module('starter.services', [])
       return null;
     }
   };
+})
+
+.factory('streamService', function($http, $q){
+
+    var streamUrl = 'http://198.100.125.242:80/';
+    var metadataUrl = streamUrl + '7.html';
+    var contentRegex = /<body>(.*)<\/body>/;
+    var itunesSearchUrl = 'https://itunes.apple.com/search?term=';
+    var resolutionRegex = /100x100/;
+
+    var service = {
+      getStreamInfo: getStreamInfo
+    };
+    return service;
+    // ***************************************************************************
+    function getStreamInfo() {
+      return $http.get(metadataUrl).then(function(response) {
+        var title = parseShoutcastResponse(response.data);
+        if (!title) {
+          return {};
+        }
+        return getCover(title).then(function(coverUrl) {
+          return {
+            title: title,
+            coverUrl: coverUrl
+          };
+        });
+      });
+    }
+
+    function getCover(title) {
+      return $http.get(itunesSearchUrl + title).then(function(response) {
+        var item = response.data.results[0];
+        if (!item || !item.artworkUrl100) {
+          return null;
+        }
+        return item.artworkUrl100.replace(resolutionRegex, '500x500');
+      });
+    }
+
+    function parseShoutcastResponse(html) {
+      var content = html.match(contentRegex)[1];
+      var parts = content.split(',');
+      if (parts.length < 7 || !parts[6]) {
+        return null;
+      }
+      return parts[6];
+    }
 });

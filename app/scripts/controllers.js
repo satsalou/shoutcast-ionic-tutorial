@@ -27,43 +27,52 @@ angular.module('starter.controllers', [])
   };
 })
 
-.controller('StreamController', function() {
+.controller('StreamController', function($interval, streamService) {
 
 var isPlaying = false;
 var stream;
-
+var timer;
 var vm = angular.extend(this, {
   togglePlay: togglePlay,
-  isPlaying: isPlaying
+  isPlaying: isPlaying,
+  info: null
 });
-// ********************************************************************
-
+// *********************************************************************
 function togglePlay() {
   if (vm.isPlaying) {
     pause();
   } else {
     play();
   }
-
   vm.isPlaying = isPlaying = !isPlaying;
 }
 
 function play() {
-  try {
-    stream = new window.Stream('http://stream-dc1.radioparadise.com/mp3-128');
+  if (window.Stream) {
+    stream = new window.Stream('http://198.100.125.242:80/');
     // Play audio
     stream.play();
-
-  } catch (Error) {
-    alert(Error);
   }
+  getStreamInfo();
+  timer = $interval(function() {
+      getStreamInfo();
+  }, 5000);
 }
 
 function pause() {
+  vm.info = null;
+  $interval.cancel(timer);
   if (!stream) {
     return;
   }
-
   stream.stop();
+}
+
+function getStreamInfo() {
+  streamService.getStreamInfo().then(function(info) {
+    vm.info = info;
+  }, function() {
+    vm.info = null;
+  });
 }
 });
